@@ -9,7 +9,7 @@ interface RetrieveSectionProps {
 
 const RetrieveSection: React.FC<RetrieveSectionProps> = ({ data }) => {
   return (
-    <Section title="Sources">
+    <Section title="Zdroje">
       <SearchResults results={data.results} />
     </Section>
   )

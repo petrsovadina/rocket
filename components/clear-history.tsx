@@ -28,19 +28,18 @@ export function ClearHistory({ empty }: ClearHistoryProps) {
     <AlertDialog open={open} onOpenChange={setOpen}>
       <AlertDialogTrigger asChild>
         <Button variant="outline" className="w-full" disabled={empty}>
-          Clear History
+          Vymazat historii
         </Button>
       </AlertDialogTrigger>
       <AlertDialogContent>
         <AlertDialogHeader>
-          <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+          <AlertDialogTitle>Jste si opravdu jistí?</AlertDialogTitle>
           <AlertDialogDescription>
-            This action cannot be undone. This will permanently delete your
-            history and remove your data from our servers.
+            Tuto akci nelze vrátit zpět. Trvale vymaže vaši historii a odstraní vaše data z našich serverů.
           </AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter>
-          <AlertDialogCancel disabled={isPending}>Cancel</AlertDialogCancel>
+          <AlertDialogCancel disabled={isPending}>Zrušit</AlertDialogCancel>
           <AlertDialogAction
             disabled={isPending}
             onClick={event => {
@@ -50,13 +49,13 @@ export function ClearHistory({ empty }: ClearHistoryProps) {
                 if (result?.error) {
                   toast.error(result.error)
                 } else {
-                  toast.success('History cleared')
+                  toast.success('Historie byla vymazána')
                 }
                 setOpen(false)
               })
             }}
           >
-            {isPending ? <Spinner /> : 'Clear'}
+            {isPending ? <Spinner /> : 'Vymazat'}
           </AlertDialogAction>
         </AlertDialogFooter>
       </AlertDialogContent>

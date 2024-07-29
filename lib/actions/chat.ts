@@ -6,8 +6,8 @@ import { type Chat } from '@/lib/types'
 import { Redis } from '@upstash/redis'
 
 const redis = new Redis({
-  url: process.env.UPSTASH_REDIS_REST_URL || '',
-  token: process.env.UPSTASH_REDIS_REST_TOKEN || ''
+  url: "https://massive-lionfish-52017.upstash.io",
+  token: "AcsxAAIncDExOTQ3ZjNlZWYwNWI0YmNhODMxMjM1MjhiMWZkZGFjMHAxNTIwMTc"
 })
 
 export async function getChats(userId?: string | null) {

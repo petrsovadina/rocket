@@ -34,12 +34,12 @@ export function ChatShare({ chatId, className }: ChatShareProps) {
     })
     const result = await shareChat(chatId)
     if (!result) {
-      toast.error('Failed to share chat')
+      toast.error('Nepodařilo se sdílet chat')
       return
     }
 
     if (!result.sharePath) {
-      toast.error('Could not copy link to clipboard')
+      toast.error('Nepodařilo se zkopírovat odkaz do schránky')
       return
     }
 
@@ -50,10 +50,10 @@ export function ChatShare({ chatId, className }: ChatShareProps) {
   const handleCopy = () => {
     if (shareUrl) {
       copyToClipboard(shareUrl)
-      toast.success('Link copied to clipboard')
+      toast.success('Odkaz zkopírován do schránky')
       setOpen(false)
     } else {
-      toast.error('No link to copy')
+      toast.error('Žádný odkaz ke zkopírování')
     }
   }
 
@@ -77,20 +77,20 @@ export function ChatShare({ chatId, className }: ChatShareProps) {
         </DialogTrigger>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Share link to search result</DialogTitle>
+            <DialogTitle>Sdílet odkaz na výsledek vyhledávání</DialogTitle>
             <DialogDescription>
-              Anyone with the link will be able to view this search result.
+              Kdokoli s tímto odkazem bude moci zobrazit tento výsledek vyhledávání.
             </DialogDescription>
           </DialogHeader>
           <DialogFooter className="items-center">
             {!shareUrl && (
               <Button onClick={handleShare} disabled={pending} size="sm">
-                {pending ? <Spinner /> : 'Get link'}
+                {pending ? <Spinner /> : 'Získat odkaz'}
               </Button>
             )}
             {shareUrl && (
               <Button onClick={handleCopy} disabled={pending} size="sm">
-                {'Copy link'}
+                {'Kopírovat odkaz'}
               </Button>
             )}
           </DialogFooter>

@@ -5,13 +5,16 @@ import { createOpenAI } from '@ai-sdk/openai'
 import { google } from '@ai-sdk/google'
 import { anthropic } from '@ai-sdk/anthropic'
 import { CoreMessage } from 'ai'
+import { MistralClient } from '@mistralai/mistralai'
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs))
 }
 
-export function getModel(useSubModel = false) {
-  const ollamaBaseUrl = process.env.OLLAMA_BASE_URL + '/api'
+export type ModelType = 'mistral' | 'ollama' | 'google' | 'anthropic' | 'openai'
+
+export function getModel(modelType: ModelType, useSubModel = false) {
+  const ollamaBaseUrl = process.env.OLLAMA_BASE_URL ? process.env.OLLAMA_BASE_URL + '/api' : undefined
   const ollamaModel = process.env.OLLAMA_MODEL
   const ollamaSubModel = process.env.OLLAMA_SUB_MODEL
   const openaiApiBase = process.env.OPENAI_API_BASE
@@ -19,55 +22,67 @@ export function getModel(useSubModel = false) {
   let openaiApiModel = process.env.OPENAI_API_MODEL || 'gpt-4o'
   const googleApiKey = process.env.GOOGLE_GENERATIVE_AI_API_KEY
   const anthropicApiKey = process.env.ANTHROPIC_API_KEY
+  const mistralApiKey = process.env.MISTRAL_API_KEY
 
-  if (
-    !(ollamaBaseUrl && ollamaModel) &&
-    !openaiApiKey &&
-    !googleApiKey &&
-    !anthropicApiKey
-  ) {
-    throw new Error(
-      'Missing environment variables for Ollama, OpenAI, Google or Anthropic'
-    )
+  switch (modelType) {
+    case 'mistral':
+      if (!mistralApiKey) {
+        console.warn('Missing MISTRAL_API_KEY environment variable')
+        return null
+      }
+      const mistral = new MistralClient(mistralApiKey)
+      return async (messages: CoreMessage[]) => {
+        const response = await mistral.chat({
+          model: 'mistral-large-latest',
+          messages: messages.map(msg => ({
+            role: msg.role,
+            content: msg.content as string,
+          })),
+          max_tokens: 128000,
+        })
+        return {
+          role: 'assistant',
+          content: response.choices[0].message.content,
+        }
+      }
+
+    case 'ollama':
+      if (!(ollamaBaseUrl && ollamaModel)) {
+        console.warn('Missing Ollama configuration environment variables')
+        return null
+      }
+      const ollama = createOllama({ baseURL: ollamaBaseUrl })
+      return useSubModel && ollamaSubModel ? ollama(ollamaSubModel) : ollama(ollamaModel)
+
+    case 'google':
+      if (!googleApiKey) {
+        console.warn('Missing GOOGLE_GENERATIVE_AI_API_KEY environment variable')
+        return null
+      }
+      return google('models/gemini-1.5-pro-latest')
+
+    case 'anthropic':
+      if (!anthropicApiKey) {
+        console.warn('Missing ANTHROPIC_API_KEY environment variable')
+        return null
+      }
+      return anthropic('claude-3-5-sonnet-20240620')
+
+    case 'openai':
+    default:
+      if (!openaiApiKey) {
+        console.warn('Missing OPENAI_API_KEY environment variable')
+        return null
+      }
+      const openai = createOpenAI({
+        baseURL: openaiApiBase,
+        apiKey: openaiApiKey,
+        organization: ''
+      })
+      return openai.chat(openaiApiModel)
   }
-  // Ollama
-  if (ollamaBaseUrl && ollamaModel) {
-    const ollama = createOllama({ baseURL: ollamaBaseUrl })
-
-    if (useSubModel && ollamaSubModel) {
-      return ollama(ollamaSubModel)
-    }
-
-    return ollama(ollamaModel)
-  }
-
-  if (googleApiKey) {
-    return google('models/gemini-1.5-pro-latest')
-  }
-
-  if (anthropicApiKey) {
-    return anthropic('claude-3-5-sonnet-20240620')
-  }
-
-  // Fallback to OpenAI instead
-
-  const openai = createOpenAI({
-    baseURL: openaiApiBase, // optional base URL for proxies etc.
-    apiKey: openaiApiKey, // optional API key, default to env property OPENAI_API_KEY
-    organization: '' // optional organization
-  })
-
-  return openai.chat(openaiApiModel)
 }
 
-/**
- * Takes an array of AIMessage and modifies each message where the role is 'tool'.
- * Changes the role to 'assistant' and converts the content to a JSON string.
- * Returns the modified messages as an array of CoreMessage.
- *
- * @param aiMessages - Array of AIMessage
- * @returns modifiedMessages - Array of modified messages
- */
 export function transformToolMessages(messages: CoreMessage[]): CoreMessage[] {
   return messages.map(message =>
     message.role === 'tool'
@@ -79,4 +94,12 @@ export function transformToolMessages(messages: CoreMessage[]): CoreMessage[] {
         }
       : message
   ) as CoreMessage[]
+}
+
+export const availableModels: { [key in ModelType]: string } = {
+  mistral: 'Mistral Large',
+  ollama: 'Ollama',
+  google: 'Google Gemini',
+  anthropic: 'Anthropic Claude',
+  openai: 'OpenAI GPT'
 }

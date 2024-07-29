@@ -4,7 +4,7 @@ import { useEffect, useState, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import type { AI, UIState } from '@/app/actions'
 import { useUIState, useActions, useAIState } from 'ai/rsc'
-import { cn } from '@/lib/utils'
+import { cn, getModel, ModelType } from '@/lib/utils'
 import { UserMessage } from './user-message'
 import { Button } from './ui/button'
 import { ArrowRight, Plus } from 'lucide-react'
@@ -16,9 +16,10 @@ import { useAppState } from '@/lib/utils/app-state'
 interface ChatPanelProps {
   messages: UIState
   query?: string
+  modelType: ModelType
 }
 
-export function ChatPanel({ messages, query }: ChatPanelProps) {
+export function ChatPanel({ messages, query, modelType }: ChatPanelProps) {
   const [input, setInput] = useState('')
   const [showEmptyScreen, setShowEmptyScreen] = useState(false)
   const [, setMessages] = useUIState<typeof AI>()
@@ -42,11 +43,15 @@ export function ChatPanel({ messages, query }: ChatPanelProps) {
       }
     ])
 
+    // Get the selected model
+    const model = getModel(modelType)
+
     // Submit and get response message
     const data = formData || new FormData()
     if (!formData) {
       data.append('input', query)
     }
+    data.append('modelType', modelType)
     const responseMessage = await submit(data)
     setMessages(currentMessages => [...currentMessages, responseMessage])
   }
@@ -99,7 +104,7 @@ export function ChatPanel({ messages, query }: ChatPanelProps) {
           disabled={isGenerating}
         >
           <span className="text-sm mr-2 group-hover:block hidden animate-in fade-in duration-300">
-            New
+            Nový
           </span>
           <Plus size={18} className="group-hover:rotate-90 transition-all" />
         </Button>
@@ -125,7 +130,7 @@ export function ChatPanel({ messages, query }: ChatPanelProps) {
             rows={1}
             maxRows={5}
             tabIndex={0}
-            placeholder="Ask a question..."
+            placeholder="Položte otázku..."
             spellCheck={false}
             value={input}
             className="resize-none w-full min-h-12 rounded-fill bg-muted border border-input pl-4 pr-10 pt-3 pb-1 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50'"

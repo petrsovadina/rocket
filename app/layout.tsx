@@ -1,5 +1,4 @@
 import type { Metadata, Viewport } from 'next'
-import { Inter as FontSans } from 'next/font/google'
 import './globals.css'
 import { cn } from '@/lib/utils'
 import { ThemeProvider } from '@/components/theme-provider'
@@ -9,14 +8,9 @@ import { Sidebar } from '@/components/sidebar'
 import { Toaster } from '@/components/ui/sonner'
 import { AppStateProvider } from '@/lib/utils/app-state'
 
-const fontSans = FontSans({
-  subsets: ['latin'],
-  variable: '--font-sans'
-})
-
 const title = 'Morphic'
 const description =
-  'A fully open-source AI-powered answer engine with a generative UI.'
+  'Plně open-source AI-powered vyhledávač s generativním uživatelským rozhraním.'
 
 export const metadata: Metadata = {
   metadataBase: new URL('https://morphic.sh'),
@@ -31,7 +25,10 @@ export const metadata: Metadata = {
     description,
     card: 'summary_large_image',
     creator: '@miiura'
-  }
+  },
+  icons: {
+    icon: '/images/brand/raketa.svg',
+  },
 }
 
 export const viewport: Viewport = {
@@ -47,8 +44,12 @@ export default function RootLayout({
   children: React.ReactNode
 }>) {
   return (
-    <html lang="en" suppressHydrationWarning>
-      <body className={cn('font-sans antialiased', fontSans.variable)}>
+    <html lang="cs" suppressHydrationWarning>
+      <head>
+        <link rel="icon" href="/images/brand/raketa.svg" type="image/svg+xml" />
+        <link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@700&family=Raleway:wght@400&family=Open+Sans:wght@400&display=swap" rel="stylesheet" />
+      </head>
+      <body className={cn('antialiased')}>
         <ThemeProvider
           attribute="class"
           defaultTheme="system"

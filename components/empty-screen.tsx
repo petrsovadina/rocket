@@ -3,16 +3,16 @@ import { ArrowRight } from 'lucide-react'
 
 const exampleMessages = [
   {
-    heading: 'What is GPT-4o mini?',
-    message: 'What is GPT-4o mini?'
+    heading: 'Co je GPT-4o mini?',
+    message: 'Co je GPT-4o mini?'
   },
   {
-    heading: 'Why is Nvidia growing rapidly?',
-    message: 'Why is Nvidia growing rapidly?'
+    heading: 'Proč Nvidia rychle roste?',
+    message: 'Proč Nvidia rychle roste?'
   },
   {
-    heading: 'How does the Vercel AI SDK work?',
-    message: 'How does the Vercel AI SDK work?'
+    heading: 'Jak funguje Vercel AI SDK?',
+    message: 'Jak funguje Vercel AI SDK?'
   },
   {
     heading: 'Tesla vs Rivian',
