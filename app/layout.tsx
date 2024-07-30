@@ -31,6 +31,9 @@ export const metadata: Metadata = {
     description,
     card: 'summary_large_image',
     creator: '@miiura'
+  },
+  icons: {
+    icon: '/brand/favicon.svg'
   }
 }
 
@@ -48,6 +51,9 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" suppressHydrationWarning>
+      <head>
+        <link rel="icon" href="/brand/favicon.svg" type="image/svg+xml" />
+      </head>
       <body className={cn('font-sans antialiased', fontSans.variable)}>
         <ThemeProvider
           attribute="class"

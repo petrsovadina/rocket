@@ -12,6 +12,7 @@ import { EmptyScreen } from './empty-screen'
 import Textarea from 'react-textarea-autosize'
 import { generateId } from 'ai'
 import { useAppState } from '@/lib/utils/app-state'
+import Image from 'next/image'
 
 interface ChatPanelProps {
   messages: UIState
@@ -94,12 +95,12 @@ export function ChatPanel({ messages, query }: ChatPanelProps) {
         <Button
           type="button"
           variant={'secondary'}
-          className="rounded-full bg-secondary/80 group transition-all hover:scale-105 pointer-events-auto"
+          className="rounded-full bg-secondary/80 group transition-all hover:scale-105 pointer-events-auto font-spacemono"
           onClick={() => handleClear()}
           disabled={isGenerating}
         >
           <span className="text-sm mr-2 group-hover:block hidden animate-in fade-in duration-300">
-            New
+            Nový
           </span>
           <Plus size={18} className="group-hover:rotate-90 transition-all" />
         </Button>
@@ -117,6 +118,15 @@ export function ChatPanel({ messages, query }: ChatPanelProps) {
         'fixed bottom-8 left-0 right-0 top-10 mx-auto h-screen flex flex-col items-center justify-center'
       }
     >
+      <div className="relative w-full max-w-2xl mb-16">
+        <Image
+          src="/brand/logo-long.svg"
+          alt="Logo Morphic"
+          width={300}
+          height={80}
+          className="mx-auto opacity-65"
+        />
+      </div>
       <form onSubmit={handleSubmit} className="max-w-2xl w-full px-6">
         <div className="relative flex items-center w-full">
           <Textarea
@@ -125,10 +135,10 @@ export function ChatPanel({ messages, query }: ChatPanelProps) {
             rows={1}
             maxRows={5}
             tabIndex={0}
-            placeholder="Ask a question..."
+            placeholder="Položte otázku..."
             spellCheck={false}
             value={input}
-            className="resize-none w-full min-h-12 rounded-fill bg-muted border border-input pl-4 pr-10 pt-3 pb-1 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50'"
+            className="resize-none w-full min-h-12 rounded-fill bg-muted border border-input pl-4 pr-10 pt-3 pb-1 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 font-raleway"
             onChange={e => {
               setInput(e.target.value)
               setShowEmptyScreen(e.target.value.length === 0)

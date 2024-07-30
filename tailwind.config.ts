@@ -75,6 +75,9 @@ const config = {
       },
       fontFamily: {
         sans: ["var(--font-sans)", ...fontFamily.sans],
+        spacemono: ["Space Mono", "monospace"],
+        raleway: ["Raleway", "sans-serif"],
+        opensans: ["Open Sans", "sans-serif"],
       },
     },
   },
