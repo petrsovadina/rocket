@@ -1,4 +1,4 @@
-# Morphic
+# 🚀 Rocket
 
 AI-poháněný vyhledávač s generativním uživatelským rozhraním.
 
