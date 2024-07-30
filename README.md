@@ -2,7 +2,7 @@
 
 AI-poháněný vyhledávač s generativním uživatelským rozhraním.
 
-![snímek](/public/capture-240404_blk.png)
+![snímek]([/public/capture-240404_blk.png](https://github.com/petrsovadina/rocket/blob/d3c4012cb985c2f03e000593f8fcc3721c781e01/public/brand/logo-long.svg))
 
 > [!POZNÁMKA]
 > Vezměte prosím na vědomí, že existují rozdíly mezi tímto repozitářem a oficiální webovou stránkou [morphic.sh](https://morphic.sh). Oficiální webová stránka je fork tohoto repozitáře s dalšími funkcemi, jako je autentizace, které jsou nezbytné pro poskytování služby online. Základní zdrojový kód Morphicu se nachází v tomto repozitáři a je navržen tak, aby se dal snadno sestavit a nasadit.
