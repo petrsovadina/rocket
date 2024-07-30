@@ -8,6 +8,7 @@ import Footer from '@/components/footer'
 import { Sidebar } from '@/components/sidebar'
 import { Toaster } from '@/components/ui/sonner'
 import { AppStateProvider } from '@/lib/utils/app-state'
+import RetroGrid from '@/components/RetroGrid'
 
 const fontSans = FontSans({
   subsets: ['latin'],
@@ -62,6 +63,7 @@ export default function RootLayout({
           disableTransitionOnChange
         >
           <AppStateProvider>
+            <RetroGrid />
             <Header />
             {children}
             <Sidebar />
