@@ -1,6 +1,6 @@
 # Rocket
 
-![sovadina.dev logo](https://sovadina.dev/logo.png)
+![sovadina.dev logo](https://github.com/petrsovadina/rocket/blob/8453b7201112f875e972eff3f5b607170087d2aa/public/images/brand/sovadina.dev.svg)
 
 Rocket je moderní webová aplikace využívající AI technologie pro vyhledávání a generování odpovědí.
 
