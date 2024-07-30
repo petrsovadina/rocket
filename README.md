@@ -1,5 +1,7 @@
 # Rocket
 
+![sovadina.dev logo](https://sovadina.dev/logo.png)
+
 Rocket je moderní webová aplikace využívající AI technologie pro vyhledávání a generování odpovědí.
 
 ## Technologie
