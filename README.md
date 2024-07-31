@@ -2,10 +2,10 @@
 
 AI-poháněný vyhledávač s generativním uživatelským rozhraním.
 
-![snímek]([[/public/capture-240404_blk.png](https://github.com/petrsovadina/rocket/blob/d3c4012cb985c2f03e000593f8fcc3721c781e01/public/brand/logo-long.svg)](https://github.com/petrsovadina/rocket/blob/b23f21d1bc73b2682195f4ff5ca5e7bc707d89ea/public/brand/Morphic.jpeg))
+![snímek](https://github.com/petrsovadina/rocket/blob/71613e24c0d11c2510497b118d2a028337a29aed/public/brand/sovadina.dev.background.png)
 
-> [!POZNÁMKA]
-> Vezměte prosím na vědomí, že existují rozdíly mezi tímto repozitářem a oficiální webovou stránkou [morphic.sh](https://morphic.sh). Oficiální webová stránka je fork tohoto repozitáře s dalšími funkcemi, jako je autentizace, které jsou nezbytné pro poskytování služby online. Základní zdrojový kód Morphicu se nachází v tomto repozitáři a je navržen tak, aby se dal snadno sestavit a nasadit.
+> **POZNÁMKA**
+> Vezměte prosím na vědomí, že existují rozdíly mezi tímto repozitářem a oficiální webovou stránkou [morphic.sh](https://morphic.sh). Oficiální webová stránka je fork tohoto repozitáře s dalšími funkcemi, jako je autentizace, které jsou nezbytné pro poskytování služby online. Základní zdrojový kód 🚀 Rocket se nachází v tomto repozitáři a je navržen tak, aby se dal snadno sestavit a nasadit.
 
 ## 🗂️ Přehled
 
@@ -41,9 +41,7 @@ AI-poháněný vyhledávač s generativním uživatelským rozhraním.
 - Reader API: [Jina AI](https://jina.ai/)
 - Serverless databáze: [Upstash](https://upstash.com/)
 - Knihovna komponent: [shadcn/ui](https://ui.shadcn.com/)
-- Primitivy bezhlav
-
-ých komponent: [Radix UI](https://www.radix-ui.com/)
+- Primitivy bezhlavých komponent: [Radix UI](https://www.radix-ui.com/)
 - Stylování: [Tailwind CSS](https://tailwindcss.com/)
 
 ## 🚀 Rychlý start
@@ -51,3 +49,7 @@ AI-poháněný vyhledávač s generativním uživatelským rozhraním.
 ### 1. Forkněte a naklonujte repozitář
 
 Forkněte repozitář na svůj Github účet a poté spusťte následující příkaz pro naklonování repozitáře:
+
+```bash
+git clone https://github.com/vašeuživatelskéjméno/rocket.git
+cd rocket
