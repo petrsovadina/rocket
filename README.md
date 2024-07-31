@@ -7,6 +7,9 @@ AI-poháněný vyhledávač s generativním uživatelským rozhraním.
 > **POZNÁMKA**
 > Vezměte prosím na vědomí, že projekt je stále ve vývoji a je to osobní siteprojekt 🙂
 
+![snímek](https://github.com/petrsovadina/rocket/blob/2c99b9e3e694ce224662ea2d982557c7419f8588/public/brand/Rocket.jpeg)
+
+
 ## 🗂️ Přehled
 
 - 🛠 [Funkce](#-funkce)
