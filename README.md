@@ -5,7 +5,7 @@ AI-poháněný vyhledávač s generativním uživatelským rozhraním.
 ![snímek](https://github.com/petrsovadina/rocket/blob/71613e24c0d11c2510497b118d2a028337a29aed/public/brand/sovadina.dev.background.png)
 
 > **POZNÁMKA**
-> Vezměte prosím na vědomí, že existují rozdíly mezi tímto repozitářem a oficiální webovou stránkou [morphic.sh](https://morphic.sh). Oficiální webová stránka je fork tohoto repozitáře s dalšími funkcemi, jako je autentizace, které jsou nezbytné pro poskytování služby online. Základní zdrojový kód 🚀 Rocket se nachází v tomto repozitáři a je navržen tak, aby se dal snadno sestavit a nasadit.
+> Vezměte prosím na vědomí, že projekt je stále ve vývoji a je to osobní siteprojekt 🙂
 
 ## 🗂️ Přehled
 
