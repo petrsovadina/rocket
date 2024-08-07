@@ -7,6 +7,9 @@ import Footer from '@/components/footer'
 import { Sidebar } from '@/components/sidebar'
 import { Toaster } from '@/components/ui/sonner'
 import { AppStateProvider } from '@/lib/utils/app-state'
+import { UserProvider } from '@auth0/nextjs-auth0/client'
+import { NextIntlClientProvider } from 'next-intl'
+import { notFound } from 'next/navigation'
 
 const title = 'Morphic'
 const description =
@@ -38,33 +41,50 @@ export const viewport: Viewport = {
   maximumScale: 1
 }
 
-export default function RootLayout({
-  children
+export default async function RootLayout({
+  children,
+  params: { locale }
 }: Readonly<{
   children: React.ReactNode
+  params: { locale: string }
 }>) {
+  let messages;
+  try {
+    messages = (await import(`@/messages/${locale}.json`)).default;
+  } catch (error) {
+    notFound();
+  }
+
   return (
-    <html lang="cs" suppressHydrationWarning>
+    <html lang={locale} suppressHydrationWarning>
       <head>
         <link rel="icon" href="/images/brand/raketa.svg" type="image/svg+xml" />
         <link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@700&family=Raleway:wght@400&family=Open+Sans:wght@400&display=swap" rel="stylesheet" />
       </head>
       <body className={cn('antialiased')}>
-        <ThemeProvider
-          attribute="class"
-          defaultTheme="system"
-          enableSystem
-          disableTransitionOnChange
-        >
-          <AppStateProvider>
-            <Header />
-            {children}
-            <Sidebar />
-            <Footer />
-            <Toaster />
-          </AppStateProvider>
-        </ThemeProvider>
+        <NextIntlClientProvider locale={locale} messages={messages}>
+          <UserProvider>
+            <ThemeProvider
+              attribute="class"
+              defaultTheme="system"
+              enableSystem
+              disableTransitionOnChange
+            >
+              <AppStateProvider>
+                <Header />
+                {children}
+                <Sidebar />
+                <Footer />
+                <Toaster />
+              </AppStateProvider>
+            </ThemeProvider>
+          </UserProvider>
+        </NextIntlClientProvider>
       </body>
     </html>
   )
+}
+
+export function generateStaticParams() {
+  return [{ locale: 'cs' }, { locale: 'en' }]
 }

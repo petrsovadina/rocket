@@ -1,0 +1,13 @@
+{
+  "auth": {
+    "login": "Log in",
+    "logout": "Log out"
+  },
+  "common": {
+    "loading": "Loading...",
+    "languageSwitch": "Switch to Czech"
+  },
+  "footer": {
+    "github": "GitHub repository"
+  }
+}

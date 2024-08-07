@@ -1,0 +1,13 @@
+{
+  "auth": {
+    "login": "Přihlásit se",
+    "logout": "Odhlásit se"
+  },
+  "common": {
+    "loading": "Načítání...",
+    "languageSwitch": "Přepnout na angličtinu"
+  },
+  "footer": {
+    "github": "GitHub repozitář"
+  }
+}
