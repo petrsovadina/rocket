@@ -51,11 +51,11 @@ export default function RootLayout({
   children: React.ReactNode
 }>) {
   return (
-    <html lang="en" suppressHydrationWarning>
+    <html lang="cs" suppressHydrationWarning>
       <head>
         <link rel="icon" href="/brand/favicon.svg" type="image/svg+xml" />
       </head>
-      <body className={cn('font-sans antialiased', fontSans.variable)}>
+      <body className={cn('font-sans antialiased bg-background text-foreground', fontSans.variable)}>
         <ThemeProvider
           attribute="class"
           defaultTheme="system"

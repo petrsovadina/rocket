@@ -24,7 +24,7 @@ export function BotMessage({ content }: { content: string }) {
           rehypeKatex
         ]}
         remarkPlugins={[remarkGfm, remarkMath]}
-        className="prose-sm prose-neutral prose-a:text-accent-foreground/50"
+        className="prose-sm prose-neutral dark:prose-invert prose-a:text-accent-foreground/50"
       >
         {processedData}
       </MemoizedReactMarkdown>
