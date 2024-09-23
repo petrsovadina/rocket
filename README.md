@@ -52,7 +52,3 @@ AI-poháněný vyhledávač s generativním uživatelským rozhraním.
 ### 1. Forkněte a naklonujte repozitář
 
 Forkněte repozitář na svůj Github účet a poté spusťte následující příkaz pro naklonování repozitáře:
-
-```bash
-git clone https://github.com/vašeuživatelskéjméno/rocket.git
-cd rocket
