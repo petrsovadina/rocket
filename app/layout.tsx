@@ -9,6 +9,13 @@ import { Sidebar } from '@/components/sidebar'
 import { Toaster } from '@/components/ui/sonner'
 import { AppStateProvider } from '@/lib/utils/app-state'
 import RetroGrid from '@/components/RetroGrid'
+import {
+  ClerkProvider,
+  SignInButton,
+  SignedIn,
+  SignedOut,
+  UserButton
+} from '@clerk/nextjs'
 
 const fontSans = FontSans({
   subsets: ['latin'],
@@ -51,27 +58,29 @@ export default function RootLayout({
   children: React.ReactNode
 }>) {
   return (
-    <html lang="cs" suppressHydrationWarning>
-      <head>
-        <link rel="icon" href="/brand/favicon.svg" type="image/svg+xml" />
-      </head>
-      <body className={cn('font-sans antialiased bg-background text-foreground', fontSans.variable)}>
-        <ThemeProvider
-          attribute="class"
-          defaultTheme="system"
-          enableSystem
-          disableTransitionOnChange
-        >
-          <AppStateProvider>
-            <RetroGrid />
-            <Header />
-            {children}
-            <Sidebar />
-            <Footer />
-            <Toaster />
-          </AppStateProvider>
-        </ThemeProvider>
-      </body>
-    </html>
+    <ClerkProvider>
+      <html lang="cs" suppressHydrationWarning>
+        <head>
+          <link rel="icon" href="/brand/favicon.svg" type="image/svg+xml" />
+        </head>
+        <body className={cn('font-sans antialiased bg-background text-foreground', fontSans.variable)}>
+          <ThemeProvider
+            attribute="class"
+            defaultTheme="system"
+            enableSystem
+            disableTransitionOnChange
+          >
+            <AppStateProvider>
+              <RetroGrid />
+              <Header />
+              {children}
+              <Sidebar />
+              <Footer />
+              <Toaster />
+            </AppStateProvider>
+          </ThemeProvider>
+        </body>
+      </html>
+    </ClerkProvider>
   )
 }
