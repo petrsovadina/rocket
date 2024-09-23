@@ -5,19 +5,28 @@ import { redirect } from 'next/navigation'
 import { type Chat } from '@/lib/types'
 import { Redis } from '@upstash/redis'
 
-const redis = new Redis({
-  url: process.env.UPSTASH_REDIS_REST_URL || '',
-  token: process.env.UPSTASH_REDIS_REST_TOKEN || ''
-})
+let redis: Redis | null = null;
+
+// Funkce pro inicializaci Redis klienta
+const initRedis = (): Redis | null => {
+  if (!redis && process.env.UPSTASH_REDIS_REST_URL && process.env.UPSTASH_REDIS_REST_TOKEN) {
+    redis = new Redis({
+      url: process.env.UPSTASH_REDIS_REST_URL,
+      token: process.env.UPSTASH_REDIS_REST_TOKEN
+    });
+  }
+  return redis;
+}
 
 export async function getChats(userId?: string | null) {
-  if (!userId) {
+  const redisClient = initRedis();
+  if (!redisClient || !userId) {
     return []
   }
 
   try {
-    const pipeline = redis.pipeline()
-    const chats: string[] = await redis.zrange(`user:chat:${userId}`, 0, -1, {
+    const pipeline = redisClient.pipeline()
+    const chats: string[] = await redisClient.zrange(`user:chat:${userId}`, 0, -1, {
       rev: true
     })
 
@@ -29,12 +38,17 @@ export async function getChats(userId?: string | null) {
 
     return results as Chat[]
   } catch (error) {
+    console.error('Chyba při získávání chatů:', error);
     return []
   }
 }
 
 export async function getChat(id: string, userId: string = 'anonymous') {
-  const chat = await redis.hgetall<Chat>(`chat:${id}`)
+  const redisClient = initRedis();
+  if (!redisClient) {
+    return null;
+  }
+  const chat = await redisClient.hgetall<Chat>(`chat:${id}`)
 
   if (!chat) {
     return null
@@ -46,25 +60,40 @@ export async function getChat(id: string, userId: string = 'anonymous') {
 export async function clearChats(
   userId: string = 'anonymous'
 ): Promise<{ error?: string }> {
-  const chats: string[] = await redis.zrange(`user:chat:${userId}`, 0, -1)
-  if (!chats.length) {
-    return { error: 'No chats to clear' }
-  }
-  const pipeline = redis.pipeline()
-
-  for (const chat of chats) {
-    pipeline.del(chat)
-    pipeline.zrem(`user:chat:${userId}`, chat)
+  const redisClient = initRedis();
+  if (!redisClient) {
+    return { error: 'Nelze se připojit k Redis' };
   }
 
-  await pipeline.exec()
+  try {
+    const chats: string[] = await redisClient.zrange(`user:chat:${userId}`, 0, -1);
+    if (!chats.length) {
+      return { error: 'Žádné chaty k vymazání' };
+    }
 
-  revalidatePath('/')
-  redirect('/')
+    const pipeline = redisClient.pipeline();
+    for (const chat of chats) {
+      pipeline.del(chat);
+    }
+    pipeline.del(`user:chat:${userId}`);
+
+    await pipeline.exec();
+
+    return {};
+  } catch (error) {
+    console.error('Chyba při mazání chatů:', error);
+    return { error: 'Nastala chyba při mazání chatů' };
+  }
 }
 
 export async function saveChat(chat: Chat, userId: string = 'anonymous') {
-  const pipeline = redis.pipeline()
+  const redisClient = initRedis();
+  if (!redisClient) {
+    console.error('Nelze se připojit k Redis');
+    return;
+  }
+  
+  const pipeline = redisClient.pipeline()
   pipeline.hmset(`chat:${chat.id}`, chat)
   pipeline.zadd(`user:chat:${chat.userId}`, {
     score: Date.now(),
@@ -74,7 +103,13 @@ export async function saveChat(chat: Chat, userId: string = 'anonymous') {
 }
 
 export async function getSharedChat(id: string) {
-  const chat = await redis.hgetall<Chat>(`chat:${id}`)
+  const redisClient = initRedis();
+  if (!redisClient) {
+    console.error('Nelze se připojit k Redis');
+    return null;
+  }
+  
+  const chat = await redisClient.hgetall<Chat>(`chat:${id}`)
 
   if (!chat || !chat.sharePath) {
     return null
@@ -84,7 +119,13 @@ export async function getSharedChat(id: string) {
 }
 
 export async function shareChat(id: string, userId: string = 'anonymous') {
-  const chat = await redis.hgetall<Chat>(`chat:${id}`)
+  const redisClient = initRedis();
+  if (!redisClient) {
+    console.error('Nelze se připojit k Redis');
+    return null;
+  }
+  
+  const chat = await redisClient.hgetall<Chat>(`chat:${id}`)
 
   if (!chat || chat.userId !== userId) {
     return null
@@ -95,7 +136,7 @@ export async function shareChat(id: string, userId: string = 'anonymous') {
     sharePath: `/share/${id}`
   }
 
-  await redis.hmset(`chat:${id}`, payload)
+  await redisClient.hmset(`chat:${id}`, payload)
 
   return payload
 }
