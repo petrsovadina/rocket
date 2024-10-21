@@ -19,9 +19,10 @@ import { useAuth } from '@clerk/nextjs'
 interface ChatPanelProps {
   messages: UIState
   query?: string
+  isSignedIn?: boolean
 }
 
-export function ChatPanel({ messages, query }: ChatPanelProps) {
+export function ChatPanel({ messages, query, isSignedIn }: ChatPanelProps) {
   const [input, setInput] = useState('')
   const [showEmptyScreen, setShowEmptyScreen] = useState(false)
   const [, setMessages] = useUIState<typeof AI>()
