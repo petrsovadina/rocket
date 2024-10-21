@@ -22,7 +22,7 @@ interface ChatPanelProps {
   isSignedIn?: boolean
 }
 
-export function ChatPanel({ messages, query, isSignedIn }: ChatPanelProps) {
+export function ChatPanel({ messages, query, isSignedIn: propIsSignedIn }: ChatPanelProps) {
   const [input, setInput] = useState('')
   const [showEmptyScreen, setShowEmptyScreen] = useState(false)
   const [, setMessages] = useUIState<typeof AI>()
@@ -36,11 +36,12 @@ export function ChatPanel({ messages, query, isSignedIn }: ChatPanelProps) {
   const logoSrc = theme === 'dark'
     ? 'https://utfs.io/f/z2Za8Zqs0NofWQee3Xg8IkPwAlRNsHM03E56iZhmaY7BQ1DT'
     : '/brand/logo-long.svg'
-  const { isSignedIn } = useAuth()
+  const { isSignedIn: authIsSignedIn } = useAuth()
   const [isFirstMessage, setIsFirstMessage] = useState(true)
 
   async function handleQuerySubmit(query: string, formData?: FormData) {
-    if (!isSignedIn && !isFirstMessage) {
+    const currentIsSignedIn = propIsSignedIn ?? authIsSignedIn
+    if (!currentIsSignedIn && !isFirstMessage) {
       // Přesměrování na přihlašovací stránku
       router.push('/sign-in')
       return
