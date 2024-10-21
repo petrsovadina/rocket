@@ -14,6 +14,7 @@ import { generateId } from 'ai'
 import { useAppState } from '@/lib/utils/app-state'
 import Image from 'next/image'
 import { useTheme } from 'next-themes'
+import { useAuth } from '@clerk/nextjs'
 
 interface ChatPanelProps {
   messages: UIState
@@ -34,10 +35,19 @@ export function ChatPanel({ messages, query }: ChatPanelProps) {
   const logoSrc = theme === 'dark'
     ? 'https://utfs.io/f/z2Za8Zqs0NofWQee3Xg8IkPwAlRNsHM03E56iZhmaY7BQ1DT'
     : '/brand/logo-long.svg'
+  const { isSignedIn } = useAuth()
+  const [isFirstMessage, setIsFirstMessage] = useState(true)
 
   async function handleQuerySubmit(query: string, formData?: FormData) {
+    if (!isSignedIn && !isFirstMessage) {
+      // Přesměrování na přihlašovací stránku
+      router.push('/sign-in')
+      return
+    }
+
     setInput(query)
     setIsGenerating(true)
+    setIsFirstMessage(false)
 
     // Add user message to UI state
     setMessages(currentMessages => [
