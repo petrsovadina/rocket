@@ -13,6 +13,7 @@ import Textarea from 'react-textarea-autosize'
 import { generateId } from 'ai'
 import { useAppState } from '@/lib/utils/app-state'
 import Image from 'next/image'
+import { useTheme } from 'next-themes'
 
 interface ChatPanelProps {
   messages: UIState
@@ -29,6 +30,10 @@ export function ChatPanel({ messages, query }: ChatPanelProps) {
   const router = useRouter()
   const inputRef = useRef<HTMLTextAreaElement>(null)
   const isFirstRender = useRef(true) // For development environment
+  const { theme } = useTheme()
+  const logoSrc = theme === 'dark'
+    ? 'https://utfs.io/f/z2Za8Zqs0NofWQee3Xg8IkPwAlRNsHM03E56iZhmaY7BQ1DT'
+    : '/brand/logo-long.svg'
 
   async function handleQuerySubmit(query: string, formData?: FormData) {
     setInput(query)
@@ -120,7 +125,7 @@ export function ChatPanel({ messages, query }: ChatPanelProps) {
     >
       <div className="relative w-full max-w-2xl mb-16">
         <Image
-          src="/brand/logo-long.svg"
+          src={logoSrc}
           alt="Logo Morphic"
           width={300}
           height={80}
