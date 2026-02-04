@@ -19,16 +19,28 @@ export function getModel(useSubModel = false) {
   let openaiApiModel = process.env.OPENAI_API_MODEL || 'gpt-4o'
   const googleApiKey = process.env.GOOGLE_GENERATIVE_AI_API_KEY
   const anthropicApiKey = process.env.ANTHROPIC_API_KEY
+  const groqApiKey = process.env.GROQ_API_KEY
+  const groqModel = process.env.GROQ_MODEL || 'llama-3.3-70b-versatile'
 
   if (
     !(ollamaBaseUrl && ollamaModel) &&
     !openaiApiKey &&
     !googleApiKey &&
-    !anthropicApiKey
+    !anthropicApiKey &&
+    !groqApiKey
   ) {
     throw new Error(
-      'Missing environment variables for Ollama, OpenAI, Google or Anthropic'
+      'Missing environment variables for Ollama, OpenAI, Google, Anthropic or Groq'
     )
+  }
+
+  // Groq (OpenAI-compatible, fast inference)
+  if (groqApiKey) {
+    const groq = createOpenAI({
+      baseURL: 'https://api.groq.com/openai/v1',
+      apiKey: groqApiKey
+    })
+    return groq.chat(groqModel)
   }
   // Ollama
   if (ollamaBaseUrl && ollamaModel) {
