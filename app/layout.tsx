@@ -10,6 +10,7 @@ import { Toaster } from '@/components/ui/sonner'
 import { AppStateProvider } from '@/lib/utils/app-state'
 import RetroGrid from '@/components/RetroGrid'
 import { ClerkProvider } from '@clerk/nextjs'
+import { Analytics } from '@vercel/analytics/next'
 
 const fontSans = FontSans({
   subsets: ['latin'],
@@ -73,6 +74,7 @@ export default function RootLayout({
               <Toaster />
             </AppStateProvider>
           </ThemeProvider>
+          <Analytics />
         </body>
       </html>
     </ClerkProvider>
