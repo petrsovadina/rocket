@@ -5,4 +5,4 @@ export const retrieveSchema = z.object({
   url: z.string().describe('The url to retrieve')
 })
 
-export type PartialInquiry = DeepPartial<typeof retrieveSchema>
+export type PartialRetrieve = DeepPartial<typeof retrieveSchema>

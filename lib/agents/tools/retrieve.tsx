@@ -2,6 +2,7 @@ import { tool } from 'ai'
 import { retrieveSchema } from '@/lib/schema/retrieve'
 import { ToolProps } from '.'
 import { SearchSkeleton } from '@/components/search-skeleton'
+import { API_URLS, MODEL_CONFIG } from '@/lib/constants'
 import { SearchResults as SearchResultsType } from '@/lib/types'
 import RetrieveSection from '@/components/retrieve-section'
 
@@ -15,7 +16,7 @@ export const retrieveTool = ({ uiStream, fullResponse }: ToolProps) => tool({
 
     let results: SearchResultsType | undefined
     try {
-      const response = await fetch(`https://r.jina.ai/${url}`, {
+      const response = await fetch(`${API_URLS.JINA_READER}${url}`, {
         method: 'GET',
         headers: {
           Accept: 'application/json',
@@ -27,8 +28,8 @@ export const retrieveTool = ({ uiStream, fullResponse }: ToolProps) => tool({
         hasError = true
       } else {
         // Limit the content to 5000 characters
-        if (json.data.content.length > 5000) {
-          json.data.content = json.data.content.slice(0, 5000)
+        if (json.data.content.length > MODEL_CONFIG.CONTENT_LIMIT) {
+          json.data.content = json.data.content.slice(0, MODEL_CONFIG.CONTENT_LIMIT)
         }
         results = {
           results: [

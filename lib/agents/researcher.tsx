@@ -3,6 +3,8 @@ import { CoreMessage, ToolCallPart, ToolResultPart, streamText } from 'ai'
 import { getTools } from './tools'
 import { getModel, transformToolMessages } from '../utils'
 import { AnswerSection } from '@/components/answer-section'
+import { MODEL_CONFIG } from '@/lib/constants'
+import { getProviderConfig } from '@/lib/utils/providers'
 
 export async function researcher(
   uiStream: ReturnType<typeof createStreamableUI>,
@@ -15,10 +17,7 @@ export async function researcher(
 
   // Transform the messages if using Ollama provider
   let processedMessages = messages
-  const useOllamaProvider = !!(
-    process.env.OLLAMA_MODEL && process.env.OLLAMA_BASE_URL
-  )
-  const useAnthropicProvider = !!process.env.ANTHROPIC_API_KEY
+  const { useOllama: useOllamaProvider, useAnthropic: useAnthropicProvider } = getProviderConfig()
   if (useOllamaProvider) {
     processedMessages = transformToolMessages(messages)
   }
@@ -31,7 +30,7 @@ export async function researcher(
   const currentDate = new Date().toLocaleString()
   const result = await streamText({
     model: getModel(useSubModel),
-    maxTokens: 2500,
+    maxTokens: MODEL_CONFIG.MAX_TOKENS,
     system: `As a professional search expert, you possess the ability to search for any information on the web.
     or any information on the web.
     For each user query, utilize the search results to their fullest potential to provide additional information and assistance in your response.

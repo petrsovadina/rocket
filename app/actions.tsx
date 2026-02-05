@@ -24,6 +24,8 @@ import { VideoSearchSection } from '@/components/video-search-section'
 import { transformToolMessages } from '@/lib/utils'
 import { AnswerSection } from '@/components/answer-section'
 import { ErrorCard } from '@/components/error-card'
+import { MESSAGE_TYPES, MODEL_CONFIG } from '@/lib/constants'
+import { getProviderConfig } from '@/lib/utils/providers'
 
 async function submit(
   formData?: FormData,
@@ -43,9 +45,9 @@ async function submit(
     .filter(
       message =>
         message.role !== 'tool' &&
-        message.type !== 'followup' &&
-        message.type !== 'related' &&
-        message.type !== 'end'
+        message.type !== MESSAGE_TYPES.FOLLOWUP &&
+        message.type !== MESSAGE_TYPES.RELATED &&
+        message.type !== MESSAGE_TYPES.END
     )
     .map(message => {
       const { role, content } = message
@@ -55,11 +57,12 @@ async function submit(
   // groupId is used to group the messages for collapse
   const groupId = generateId()
 
-  const useSpecificAPI = process.env.USE_SPECIFIC_API_FOR_WRITER === 'true'
-  const useOllamaProvider = !!(
-    process.env.OLLAMA_MODEL && process.env.OLLAMA_BASE_URL
-  )
-  const maxMessages = useSpecificAPI ? 5 : useOllamaProvider ? 1 : 10
+  const { useSpecificAPI, useOllama: useOllamaProvider } = getProviderConfig()
+  const maxMessages = useSpecificAPI
+    ? MODEL_CONFIG.MAX_MESSAGES_SPECIFIC_API
+    : useOllamaProvider
+      ? MODEL_CONFIG.MAX_MESSAGES_OLLAMA
+      : MODEL_CONFIG.MAX_MESSAGES_DEFAULT
   // Limit the number of messages to the maximum
   messages.splice(0, Math.max(messages.length - maxMessages, 0))
   // Get the user input from the form data
@@ -75,10 +78,10 @@ async function submit(
   const type = skip
     ? undefined
     : formData?.has('input')
-    ? 'input'
+    ? MESSAGE_TYPES.INPUT
     : formData?.has('related_query')
-    ? 'input_related'
-    : 'inquiry'
+    ? MESSAGE_TYPES.INPUT_RELATED
+    : MESSAGE_TYPES.INQUIRY
 
   // Add the user message to the state
   if (content) {
@@ -100,64 +103,36 @@ async function submit(
     })
   }
 
-  async function processEvents() {
-    // Show the spinner
-    uiStream.append(<Spinner />)
+  async function handleInquiryBranch() {
+    const inquiry = await inquire(uiStream, messages)
+    uiStream.done()
+    isGenerating.done()
+    isCollapsed.done(false)
+    aiState.done({
+      ...aiState.get(),
+      messages: [
+        ...aiState.get().messages,
+        {
+          id: generateId(),
+          role: 'assistant',
+          content: `inquiry: ${inquiry?.question}`,
+          type: MESSAGE_TYPES.INQUIRY
+        }
+      ]
+    })
+  }
 
-    let action = { object: { next: 'proceed' } }
-    // If the user skips the task, we proceed to the search
-    if (!skip) action = (await taskManager(messages)) ?? action
-
-    if (action.object.next === 'inquire') {
-      // Generate inquiry
-      const inquiry = await inquire(uiStream, messages)
-      uiStream.done()
-      isGenerating.done()
-      isCollapsed.done(false)
-      aiState.done({
-        ...aiState.get(),
-        messages: [
-          ...aiState.get().messages,
-          {
-            id: generateId(),
-            role: 'assistant',
-            content: `inquiry: ${inquiry?.question}`,
-            type: 'inquiry'
-          }
-        ]
-      })
-      return
-    }
-
-    // Set the collapsed state to true
-    isCollapsed.done(true)
-
-    //  Generate the answer
+  async function runResearchLoop(streamText: ReturnType<typeof createStreamableValue<string>>) {
     let answer = ''
     let stopReason = ''
     let toolOutputs: ToolResultPart[] = []
     let errorOccurred = false
 
-    const streamText = createStreamableValue<string>()
-
-    // If ANTHROPIC_API_KEY is set, update the UI with the answer
-    // If not, update the UI with a div
-    if (process.env.ANTHROPIC_API_KEY) {
-      uiStream.update(
-        <AnswerSection result={streamText.value} hasHeader={false} />
-      )
-    } else {
-      uiStream.update(<div />)
-    }
-
-    // If useSpecificAPI is enabled, only function calls will be made
-    // If not using a tool, this model generates the answer
     while (
       useSpecificAPI
         ? toolOutputs.length === 0 && answer.length === 0 && !errorOccurred
         : (stopReason !== 'stop' || answer.length === 0) && !errorOccurred
     ) {
-      // Search the web and generate the answer
       const { fullResponse, hasError, toolResponses, finishReason } =
         await researcher(uiStream, streamText, messages)
       stopReason = finishReason || ''
@@ -176,7 +151,7 @@ async function submit(
                 role: 'tool',
                 content: JSON.stringify(output.result),
                 name: output.toolName,
-                type: 'tool'
+                type: MESSAGE_TYPES.TOOL
               }
             ]
           })
@@ -184,9 +159,11 @@ async function submit(
       }
     }
 
-    // If useSpecificAPI is enabled, generate the answer using the specific model
+    return { answer, errorOccurred }
+  }
+
+  async function runWriterIfNeeded(answer: string, errorOccurred: boolean) {
     if (useSpecificAPI && answer.length === 0 && !errorOccurred) {
-      // modify the messages to be used by the specific model
       const modifiedMessages = transformToolMessages(messages)
       const latestMessages = modifiedMessages.slice(maxMessages * -1)
       const { response, hasError } = await writer(uiStream, latestMessages)
@@ -197,70 +174,104 @@ async function submit(
         content: answer
       })
     }
+    return { answer, errorOccurred }
+  }
+
+  function getProcessedMessages(answer: string) {
+    const { useGoogle: useGoogleProvider, useOllama: useOllamaProvider } = getProviderConfig()
+    let processedMessages: CoreMessage[] = messages
+    if (useGoogleProvider) {
+      processedMessages = transformToolMessages(messages)
+    }
+    if (useOllamaProvider) {
+      processedMessages = [{ role: 'assistant', content: answer }]
+    }
+    return processedMessages
+  }
+
+  async function finalizeSuccessState(answer: string, streamText: ReturnType<typeof createStreamableValue<string>>) {
+    const processedMessages = getProcessedMessages(answer)
+
+    streamText.done()
+    aiState.update({
+      ...aiState.get(),
+      messages: [
+        ...aiState.get().messages,
+        {
+          id: groupId,
+          role: 'assistant',
+          content: answer,
+          type: MESSAGE_TYPES.ANSWER
+        }
+      ]
+    })
+
+    const relatedQueries = await querySuggestor(uiStream, processedMessages)
+    uiStream.append(
+      <Section title="Follow-up">
+        <FollowupPanel />
+      </Section>
+    )
+
+    aiState.done({
+      ...aiState.get(),
+      messages: [
+        ...aiState.get().messages,
+        {
+          id: groupId,
+          role: 'assistant',
+          content: JSON.stringify(relatedQueries),
+          type: MESSAGE_TYPES.RELATED
+        },
+        {
+          id: groupId,
+          role: 'assistant',
+          content: 'followup',
+          type: MESSAGE_TYPES.FOLLOWUP
+        }
+      ]
+    })
+  }
+
+  function finalizeErrorState(answer: string, streamText: ReturnType<typeof createStreamableValue<string>>) {
+    aiState.done(aiState.get())
+    streamText.done()
+    uiStream.append(
+      <ErrorCard
+        errorMessage={answer || 'An error occurred. Please try again.'}
+      />
+    )
+  }
+
+  async function processEvents() {
+    uiStream.append(<Spinner />)
+
+    let action = { object: { next: 'proceed' } }
+    if (!skip) action = (await taskManager(messages)) ?? action
+
+    if (action.object.next === 'inquire') {
+      await handleInquiryBranch()
+      return
+    }
+
+    isCollapsed.done(true)
+
+    const streamText = createStreamableValue<string>()
+    if (process.env.ANTHROPIC_API_KEY) {
+      uiStream.update(
+        <AnswerSection result={streamText.value} hasHeader={false} />
+      )
+    } else {
+      uiStream.update(<div />)
+    }
+
+    let { answer, errorOccurred } = await runResearchLoop(streamText)
+    ;({ answer, errorOccurred } = await runWriterIfNeeded(answer, errorOccurred))
 
     if (!errorOccurred) {
-      const useGoogleProvider = process.env.GOOGLE_GENERATIVE_AI_API_KEY
-      const useOllamaProvider = !!(
-        process.env.OLLAMA_MODEL && process.env.OLLAMA_BASE_URL
-      )
-      let processedMessages = messages
-      // If using Google provider, we need to modify the messages
-      if (useGoogleProvider) {
-        processedMessages = transformToolMessages(messages)
-      }
-      if (useOllamaProvider) {
-        processedMessages = [{ role: 'assistant', content: answer }]
-      }
-
-      streamText.done()
-      aiState.update({
-        ...aiState.get(),
-        messages: [
-          ...aiState.get().messages,
-          {
-            id: groupId,
-            role: 'assistant',
-            content: answer,
-            type: 'answer'
-          }
-        ]
-      })
-
-      // Generate related queries
-      const relatedQueries = await querySuggestor(uiStream, processedMessages)
-      // Add follow-up panel
-      uiStream.append(
-        <Section title="Follow-up">
-          <FollowupPanel />
-        </Section>
-      )
-
-      aiState.done({
-        ...aiState.get(),
-        messages: [
-          ...aiState.get().messages,
-          {
-            id: groupId,
-            role: 'assistant',
-            content: JSON.stringify(relatedQueries),
-            type: 'related'
-          },
-          {
-            id: groupId,
-            role: 'assistant',
-            content: 'followup',
-            type: 'followup'
-          }
-        ]
-      })
+      await finalizeSuccessState(answer, streamText)
     } else {
-      aiState.done(aiState.get())
-      streamText.done()
-      uiStream.append(
-        <ErrorCard
-          errorMessage={answer || 'An error occurred. Please try again.'}
-        />
-      )
+      finalizeErrorState(answer, streamText)
     }
 
     isGenerating.done(false)
@@ -319,7 +330,7 @@ export const AI = createAI<AIState, UIState>({
     'use server'
 
     // Check if there is any message of type 'answer' in the state messages
-    if (!state.messages.some(e => e.type === 'answer')) {
+    if (!state.messages.some(e => e.type === MESSAGE_TYPES.ANSWER)) {
       return
     }
 
@@ -338,8 +349,8 @@ export const AI = createAI<AIState, UIState>({
       {
         id: generateId(),
         role: 'assistant',
-        content: `end`,
-        type: 'end'
+        content: MESSAGE_TYPES.END,
+        type: MESSAGE_TYPES.END
       }
     ]
 
@@ -355,6 +366,103 @@ export const AI = createAI<AIState, UIState>({
   }
 })
 
+function renderUserMessage(
+  id: string,
+  content: string,
+  type: string,
+  chatId: string,
+  index: number,
+  isSharePage?: boolean
+) {
+  if (type === MESSAGE_TYPES.INPUT || type === MESSAGE_TYPES.INPUT_RELATED) {
+    const json = JSON.parse(content)
+    const value = type === MESSAGE_TYPES.INPUT ? json.input : json.related_query
+    return {
+      id,
+      component: (
+        <UserMessage
+          message={value}
+          chatId={chatId}
+          showShare={index === 0 && !isSharePage}
+        />
+      )
+    }
+  }
+  if (type === MESSAGE_TYPES.INQUIRY) {
+    return {
+      id,
+      component: <CopilotDisplay content={content} />
+    }
+  }
+  return null
+}
+
+function renderAssistantMessage(id: string, content: string, type: string) {
+  const streamable = createStreamableValue()
+  streamable.done(content)
+
+  if (type === MESSAGE_TYPES.ANSWER) {
+    return {
+      id,
+      component: <AnswerSection result={streamable.value} />
+    }
+  }
+  if (type === MESSAGE_TYPES.RELATED) {
+    const relatedQueries = createStreamableValue()
+    relatedQueries.done(JSON.parse(content))
+    return {
+      id,
+      component: <SearchRelated relatedQueries={relatedQueries.value} />
+    }
+  }
+  if (type === MESSAGE_TYPES.FOLLOWUP) {
+    return {
+      id,
+      component: (
+        <Section title="Follow-up" className="pb-8">
+          <FollowupPanel />
+        </Section>
+      )
+    }
+  }
+  return null
+}
+
+function renderToolMessage(id: string, content: string, name?: string) {
+  try {
+    const toolOutput = JSON.parse(content)
+    const isCollapsed = createStreamableValue()
+    isCollapsed.done(true)
+    const searchResults = createStreamableValue()
+    searchResults.done(JSON.stringify(toolOutput))
+
+    switch (name) {
+      case 'search':
+        return {
+          id,
+          component: <SearchSection result={searchResults.value} />,
+          isCollapsed: isCollapsed.value
+        }
+      case 'retrieve':
+        return {
+          id,
+          component: <RetrieveSection data={toolOutput} />,
+          isCollapsed: isCollapsed.value
+        }
+      case 'videoSearch':
+        return {
+          id,
+          component: <VideoSearchSection result={searchResults.value} />,
+          isCollapsed: isCollapsed.value
+        }
+      default:
+        return { id, component: null }
+    }
+  } catch {
+    return { id, component: null }
+  }
+}
+
 export const getUIStateFromAIState = (aiState: Chat) => {
   const chatId = aiState.chatId
   const isSharePage = aiState.isSharePage
@@ -364,103 +472,21 @@ export const getUIStateFromAIState = (aiState: Chat) => {
 
       if (
         !type ||
-        type === 'end' ||
-        (isSharePage && type === 'related') ||
-        (isSharePage && type === 'followup')
+        type === MESSAGE_TYPES.END ||
+        (isSharePage && type === MESSAGE_TYPES.RELATED) ||
+        (isSharePage && type === MESSAGE_TYPES.FOLLOWUP)
       )
         return null
 
       switch (role) {
         case 'user':
-          switch (type) {
-            case 'input':
-            case 'input_related':
-              const json = JSON.parse(content)
-              const value = type === 'input' ? json.input : json.related_query
-              return {
-                id,
-                component: (
-                  <UserMessage
-                    message={value}
-                    chatId={chatId}
-                    showShare={index === 0 && !isSharePage}
-                  />
-                )
-              }
-            case 'inquiry':
-              return {
-                id,
-                component: <CopilotDisplay content={content} />
-              }
-          }
+          return renderUserMessage(id, content, type, chatId, index, isSharePage)
         case 'assistant':
-          const answer = createStreamableValue()
-          answer.done(content)
-          switch (type) {
-            case 'answer':
-              return {
-                id,
-                component: <AnswerSection result={answer.value} />
-              }
-            case 'related':
-              const relatedQueries = createStreamableValue()
-              relatedQueries.done(JSON.parse(content))
-              return {
-                id,
-                component: (
-                  <SearchRelated relatedQueries={relatedQueries.value} />
-                )
-              }
-            case 'followup':
-              return {
-                id,
-                component: (
-                  <Section title="Follow-up" className="pb-8">
-                    <FollowupPanel />
-                  </Section>
-                )
-              }
-          }
+          return renderAssistantMessage(id, content, type)
         case 'tool':
-          try {
-            const toolOutput = JSON.parse(content)
-            const isCollapsed = createStreamableValue()
-            isCollapsed.done(true)
-            const searchResults = createStreamableValue()
-            searchResults.done(JSON.stringify(toolOutput))
-            switch (name) {
-              case 'search':
-                return {
-                  id,
-                  component: <SearchSection result={searchResults.value} />,
-                  isCollapsed: isCollapsed.value
-                }
-              case 'retrieve':
-                return {
-                  id,
-                  component: <RetrieveSection data={toolOutput} />,
-                  isCollapsed: isCollapsed.value
-                }
-              case 'videoSearch':
-                return {
-                  id,
-                  component: (
-                    <VideoSearchSection result={searchResults.value} />
-                  ),
-                  isCollapsed: isCollapsed.value
-                }
-            }
-          } catch (error) {
-            return {
-              id,
-              component: null
-            }
-          }
+          return renderToolMessage(id, content, name)
         default:
-          return {
-            id,
-            component: null
-          }
+          return { id, component: null }
       }
     })
     .filter(message => message !== null) as UIState

@@ -3,17 +3,12 @@
 import React, { useEffect, useState } from 'react'
 import { Button } from './ui/button'
 import { ArrowRight } from 'lucide-react'
-import {
-  StreamableValue,
-  useActions,
-  useStreamableValue,
-  useUIState
-} from 'ai/rsc'
-import { AI } from '@/app/actions'
-import { UserMessage } from './user-message'
+import { StreamableValue, useStreamableValue } from 'ai/rsc'
 import { PartialRelated } from '@/lib/schema/related'
 import { Section } from './section'
 import { Skeleton } from './ui/skeleton'
+import { useMessageSubmit } from '@/lib/hooks/use-message-submit'
+import { useAuth } from '@clerk/nextjs'
 
 export interface SearchRelatedProps {
   relatedQueries: StreamableValue<PartialRelated>
@@ -22,8 +17,8 @@ export interface SearchRelatedProps {
 export const SearchRelated: React.FC<SearchRelatedProps> = ({
   relatedQueries
 }) => {
-  const { submit } = useActions()
-  const [, setMessages] = useUIState<typeof AI>()
+  const { isSignedIn } = useAuth()
+  const { submit } = useMessageSubmit(isSignedIn)
   const [data, error, pending] = useStreamableValue(relatedQueries)
   const [related, setRelated] = useState<PartialRelated>()
 
@@ -36,7 +31,6 @@ export const SearchRelated: React.FC<SearchRelatedProps> = ({
     event.preventDefault()
     const formData = new FormData(event.currentTarget as HTMLFormElement)
 
-    // // Get the submitter of the form
     const submitter = (event.nativeEvent as SubmitEvent)
       .submitter as HTMLInputElement
     let query = ''
@@ -45,17 +39,7 @@ export const SearchRelated: React.FC<SearchRelatedProps> = ({
       query = submitter.value
     }
 
-    const userMessage = {
-      id: Date.now(),
-      component: <UserMessage message={query} />
-    }
-
-    const responseMessage = await submit(formData)
-    setMessages(currentMessages => [
-      ...currentMessages,
-      userMessage,
-      responseMessage
-    ])
+    await submit(query, formData)
   }
 
   return related ? (
