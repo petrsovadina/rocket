@@ -3,40 +3,22 @@
 import { useState } from 'react'
 import { Button } from './ui/button'
 import { Input } from './ui/input'
-import { useActions, useUIState } from 'ai/rsc'
-import type { AI } from '@/app/actions'
-import { UserMessage } from './user-message'
 import { ArrowRight } from 'lucide-react'
-import { useAppState } from '@/lib/utils/app-state'
+import { useMessageSubmit } from '@/lib/hooks/use-message-submit'
+import { useAuth } from '@clerk/nextjs'
 
 export function FollowupPanel() {
   const [input, setInput] = useState('')
-  const { submit } = useActions()
-  const [, setMessages] = useUIState<typeof AI>()
-  const { isGenerating, setIsGenerating } = useAppState()
+  const { isSignedIn } = useAuth()
+  const { submit, isGenerating } = useMessageSubmit(isSignedIn)
 
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault()
-
     if (isGenerating) return
 
-    setIsGenerating(true)
-    setInput('')
-
     const formData = new FormData(event.currentTarget as HTMLFormElement)
-
-    const userMessage = {
-      id: Date.now(),
-      isGenerating: false,
-      component: <UserMessage message={input} />
-    }
-
-    const responseMessage = await submit(formData)
-    setMessages(currentMessages => [
-      ...currentMessages,
-      userMessage,
-      responseMessage
-    ])
+    setInput('')
+    await submit(input, formData)
   }
 
   return (

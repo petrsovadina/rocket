@@ -5,6 +5,7 @@ import { createOpenAI } from '@ai-sdk/openai'
 import { google } from '@ai-sdk/google'
 import { anthropic } from '@ai-sdk/anthropic'
 import { CoreMessage } from 'ai'
+import { API_URLS, MODEL_DEFAULTS } from '@/lib/constants'
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs))
@@ -16,11 +17,11 @@ export function getModel(useSubModel = false) {
   const ollamaSubModel = process.env.OLLAMA_SUB_MODEL
   const openaiApiBase = process.env.OPENAI_API_BASE
   const openaiApiKey = process.env.OPENAI_API_KEY
-  let openaiApiModel = process.env.OPENAI_API_MODEL || 'gpt-4o'
+  let openaiApiModel = process.env.OPENAI_API_MODEL || MODEL_DEFAULTS.OPENAI
   const googleApiKey = process.env.GOOGLE_GENERATIVE_AI_API_KEY
   const anthropicApiKey = process.env.ANTHROPIC_API_KEY
   const groqApiKey = process.env.GROQ_API_KEY
-  const groqModel = process.env.GROQ_MODEL || 'llama-3.3-70b-versatile'
+  const groqModel = process.env.GROQ_MODEL || MODEL_DEFAULTS.GROQ
 
   if (
     !(ollamaBaseUrl && ollamaModel) &&
@@ -37,7 +38,7 @@ export function getModel(useSubModel = false) {
   // Groq (OpenAI-compatible, fast inference)
   if (groqApiKey) {
     const groq = createOpenAI({
-      baseURL: 'https://api.groq.com/openai/v1',
+      baseURL: API_URLS.GROQ_BASE,
       apiKey: groqApiKey
     })
     return groq.chat(groqModel)
@@ -54,11 +55,11 @@ export function getModel(useSubModel = false) {
   }
 
   if (googleApiKey) {
-    return google('models/gemini-1.5-pro-latest')
+    return google(MODEL_DEFAULTS.GOOGLE)
   }
 
   if (anthropicApiKey) {
-    return anthropic('claude-3-5-sonnet-20240620')
+    return anthropic(MODEL_DEFAULTS.ANTHROPIC)
   }
 
   // Fallback to OpenAI instead

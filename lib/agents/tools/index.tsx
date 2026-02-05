@@ -9,23 +9,13 @@ export interface ToolProps {
 }
 
 export const getTools = ({ uiStream, fullResponse }: ToolProps) => {
-  const tools: any = {
-    search: searchTool({
-      uiStream,
-      fullResponse
-    }),
-    retrieve: retrieveTool({
-      uiStream,
-      fullResponse
-    })
-  }
+  const toolProps = { uiStream, fullResponse }
 
-  if (process.env.SERPER_API_KEY) {
-    tools.videoSearch = videoSearchTool({
-      uiStream,
-      fullResponse
-    })
+  return {
+    search: searchTool(toolProps),
+    retrieve: retrieveTool(toolProps),
+    ...(process.env.SERPER_API_KEY
+      ? { videoSearch: videoSearchTool(toolProps) }
+      : {})
   }
-
-  return tools
 }

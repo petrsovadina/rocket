@@ -21,4 +21,4 @@ export const searchSchema = z.object({
     )
 })
 
-export type PartialInquiry = DeepPartial<typeof searchSchema>
+export type PartialSearch = DeepPartial<typeof searchSchema>
